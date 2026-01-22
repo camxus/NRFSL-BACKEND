@@ -1,0 +1,256 @@
+# Auth routes (public)
+- httpApi:
+    path: /api/auth/signup
+    method: POST
+- httpApi:
+    path: /api/auth/login
+    method: POST
+- httpApi:
+    path: /api/auth/refresh-token
+    method: POST
+- httpApi:
+    path: /api/auth/forgot-password
+    method: POST
+- httpApi:
+    path: /api/auth/confirm-password
+    method: POST
+- httpApi:
+    path: /api/auth/set-new-password
+    method: POST
+- httpApi:
+    path: /api/auth/presign-url
+    method: GET
+
+# Dropbox routes
+- httpApi:
+    path: /api/dropbox/auth-url
+    method: GET
+- httpApi:
+    path: /api/dropbox/callback
+    method: GET
+- httpApi:
+    path: /api/dropbox/stats
+    method: GET
+
+# Storage routes
+- httpApi:
+    path: /api/storage/stats
+    method: GET
+    authorizer: jwtAuthorizer
+
+# Projects routes
+- httpApi:
+    path: /api/projects/share/{username}/{projectName}
+    method: GET
+- httpApi:
+    path: /api/projects/share/tenant/{tenantName}/{username}/{projectName}
+    method: GET
+- httpApi:
+    path: /api/projects
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/{projectId}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/{projectId}
+    method: PUT
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/{projectId}
+    method: DELETE
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/tenant/{tenantId}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/{projectId}/files
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/projects/{projectId}/files/{fileName}
+    method: DELETE
+    authorizer: jwtAuthorizer
+
+# Users routes
+- httpApi:
+    path: /api/users/search
+    method: GET
+- httpApi:
+    path: /api/users/username/{username}
+    method: GET
+- httpApi:
+    path: /api/users/{userId}
+    method: GET
+- httpApi:
+    path: /api/users
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/users
+    method: PUT
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/users
+    method: DELETE
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/users/dropbox-token
+    method: PUT
+    authorizer: jwtAuthorizer
+
+# Ratings routes
+- httpApi:
+    path: /api/ratings/{projectId}
+    method: GET
+- httpApi:
+    path: /api/ratings
+    method: POST
+- httpApi:
+    path: /api/ratings/{ratingId}
+    method: PUT
+- httpApi:
+    path: /api/ratings/{ratingId}
+    method: DELETE
+    authorizer: jwtAuthorizer
+
+# Notes routes
+- httpApi:
+    path: /api/notes/{projectId}
+    method: GET
+- httpApi:
+    path: /api/notes/{projectId}/{imageName}
+    method: GET
+- httpApi:
+    path: /api/notes
+    method: POST
+- httpApi:
+    path: /api/notes/{ratingId}
+    method: PUT
+- httpApi:
+    path: /api/notes/{ratingId}
+    method: DELETE
+    authorizer: jwtAuthorizer
+
+# Referrals routes
+- httpApi:
+    path: /api/referrals/check
+    method: GET
+- httpApi:
+    path: /api/referrals/redeem
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/referrals
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/referrals
+    method: GET
+    authorizer: jwtAuthorizer
+
+# Tenants routes
+- httpApi:
+    path: /api/tenants
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/handle/{handle}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}
+    method: PUT
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}
+    method: DELETE
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}/invite
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}/{userId}
+    method: PATCH
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}/{userId}
+    method: DELETE
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/tenants/{tenantId}/users/search
+    method: GET
+    authorizer: jwtAuthorizer
+
+# Metadata routes
+- httpApi:
+    path: /api/metadata
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/metadata/batch
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/metadata/{project_id}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/metadata/{project_id}/{image_name}
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/metadata/{project_id}/{image_name}
+    method: DELETE
+    authorizer: jwtAuthorizer
+
+# Notifications routes
+- httpApi:
+    path: /api/notifications
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/notifications
+    method: GET
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/notifications/{id}/read
+    method: PATCH
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/notifications/{id}
+    method: DELETE
+    authorizer: jwtAuthorizer
+
+# Stripe routes
+- httpApi:
+    path: /api/stripe/billing
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/stripe/billing/portal
+    method: POST
+    authorizer: jwtAuthorizer
+- httpApi:
+    path: /api/stripe/webhook
+    method: POST
+
+# Health check
+- httpApi:
+    path: /health
+    method: GET
