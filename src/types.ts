@@ -9,25 +9,27 @@ export interface SignUpInput {
   password: string;
   first_name: string;
   last_name: string;
+  birthdate: string;
   avatar?: S3Location;
 
-  bvn: number,
-  nin: number,
-  face_photo: string,
-  passport: string,
-  identity: string,
-  utility: string,
-  signature: string,
-  religion: string,
-  country: string,
-  altEmail: string,
-  altPhone: string,
-  currentAddress: string,
-  occupation: string,
-  motherMaidenName: string,
-  residentState: string,
-  residentLGA: string,
-  residentOtherLGA: string,
+  kyc: {
+    bvn: number,
+    nin: number,
+    passport: string,
+    identity: string,
+    utility: string,
+    signature: string,
+    religion: string,
+    country: string,
+    altEmail: string,
+    altPhone: string,
+    currentAddress: string,
+    occupation: string,
+    motherMaidenName: string,
+    residentState: string,
+    residentLGA: string,
+    residentOtherLGA: string,
+  }
 
 }
 
@@ -41,15 +43,16 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  birthdate: string;
+
   avatar?: S3Location | string;
   kyc: {
     bvn: number,
     nin: number,
-    face_photo: string,
-    passport: string,
-    identity: string,
-    utility: string,
-    signature: string,
+    passport: S3Location,
+    identity: S3Location,
+    utility: S3Location,
+    signature: S3Location,
     religion: string,
     country: string,
     altEmail: string,

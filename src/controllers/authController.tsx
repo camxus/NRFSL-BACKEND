@@ -17,7 +17,7 @@ import {
   confirmPasswordSchema,
   newPasswordSchema,
 } from "../utils/validation/authValidation.ts";
-import { SignInInput, SignUpInput } from "../types";
+import { SignInInput, SignUpInput, User } from "../types";
 import {
   CognitoIdentityProviderClient,
   SignUpCommand,
@@ -40,6 +40,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import jwt from "jsonwebtoken"
+import { providusAPI } from "../lib/providus"
 import { identity } from "lodash";
 
 const upload = multer({
@@ -60,7 +61,6 @@ export const uploadKycFiles = upload.fields([
   { name: "identity", maxCount: 1 },
   { name: "utility", maxCount: 1 },
   { name: "signature", maxCount: 1 },
-  { name: "face_photo", maxCount: 1 }, // optional
   { name: "avatar_file", maxCount: 1 }, // optional
 ]);
 
@@ -68,25 +68,29 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   const { error, value } = signUpSchema.validate(req.body);
   if (error) throw validationErrorHandler(error);
 
-  const { password, email, first_name, last_name, bvn, nin,
-    religion,
-    country,
-    altEmail,
-    altPhone,
-    currentAddress,
-    occupation,
-    motherMaidenName,
-    residentState,
-    residentLGA,
-    residentOtherLGA
+  const { password, email, first_name, last_name, birthdate,
+    kyc: {
+      bvn,
+      nin,
+      religion,
+      country,
+      altEmail,
+      altPhone,
+      currentAddress,
+      occupation,
+      motherMaidenName,
+      residentState,
+      residentLGA,
+      residentOtherLGA
+    }
   } =
     value as SignUpInput;
 
 
-  let face_photo =
-    typeof value.face_photo === "string"
-      ? JSON.parse((value.face_photo as string) || "{}")
-      : value.face_photo;
+  let identity =
+    typeof value.identity === "string"
+      ? JSON.parse((value.identity as string) || "{}")
+      : value.identity;
 
   let passport_photo =
     typeof value.passport_photo === "string"
@@ -110,7 +114,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
 
   let createdUserSub: string | null = null;
   let uploadedAvatarKey: string | null = null;
-  let userData: any = null;
+  let userData: User | null = null;
 
   try {
     // Cognito signup
@@ -187,7 +191,6 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       identity?: Express.Multer.File[];
       utility?: Express.Multer.File[];
       signature?: Express.Multer.File[];
-      face_photo?: Express.Multer.File[];
     };
 
     async function uploadKyc(
@@ -220,9 +223,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     if (files.signature?.[0]) {
       uploaded.signature = await uploadKyc(files.signature[0], "signature");
     }
-    if (files.face_photo?.[0]) {
-      uploaded.face_photo = await uploadKyc(files.face_photo[0], "face_photo");
-    }
+
 
     // Build DynamoDB user object
     userData = {
@@ -230,12 +231,10 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       email,
       first_name,
       last_name,
-      bvn,
-      nin,
+      birthdate,
       kyc: {
         bvn,
         nin,
-        face_photo: uploaded.face_photo,
         passport: uploaded.passport,
         identity: uploaded.identity,
         utility: uploaded.utility,
@@ -255,6 +254,24 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       created_at: new Date().toISOString(),
     };
 
+    function filesToBase64(files: Express.Multer.File[] | undefined): string {
+      if (!files || files.length === 0) return "";
+      return files[0].buffer.toString("base64");
+    }
+
+    await providusAPI.login()
+
+    await providusAPI.openAccount({
+      ...userData.kyc, NIN: userData.kyc.nin.toString(),
+      passport: filesToBase64(files?.passport),
+      identity: filesToBase64(files?.identity),
+      utility: filesToBase64(files?.utility),
+      signature: filesToBase64(files?.signature),
+    })
+
+
+    //TODO INSERT PROVIDUS USER DATA
+
     // Insert user
     await client.send(
       new PutItemCommand({
@@ -265,10 +282,10 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       })
     );
 
+
     res.status(201).json({
       user: {
         ...userData,
-        avatar: userData.avatar && await getSignedImage(s3Client, userData.avatar),
       },
     });
   } catch (error: any) {
