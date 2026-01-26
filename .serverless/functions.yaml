@@ -1,4 +1,6 @@
 api:
   handler: src/server.handler
   events: ${file(./.serverless/events.yaml)}
-  
+
+authorizer:
+  handler: src/middleware/serverlessAuth.authorizeHandler
