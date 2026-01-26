@@ -16,7 +16,7 @@ import {
   forgotPasswordSchema,
   confirmPasswordSchema,
   newPasswordSchema,
-} from "../utils/validation/authValidation.ts";
+} from "../utils/validation/authValidation";
 import { SignInInput, SignUpInput, User } from "../types";
 import {
   CognitoIdentityProviderClient,

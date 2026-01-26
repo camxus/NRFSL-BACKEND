@@ -52,35 +52,6 @@ Resources:
               - x-amz-id-2
             MaxAge: 3000
 
-  ProjectsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: Projects
-      AttributeDefinitions:
-        - AttributeName: project_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-        - AttributeName: share_url
-          AttributeType: S
-      KeySchema:
-        - AttributeName: project_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: ProjectIndex # by user_id
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: ShareUrlIndex # by share_url
-          KeySchema:
-            - AttributeName: share_url
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
-
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -88,189 +59,84 @@ Resources:
       AttributeDefinitions:
         - AttributeName: user_id
           AttributeType: S
-        - AttributeName: username
+        - AttributeName: email
           AttributeType: S
       KeySchema:
         - AttributeName: user_id
           KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: UsernameIndex
+        - IndexName: EmailIndex
           KeySchema:
-            - AttributeName: username
+            - AttributeName: email
               KeyType: HASH
           Projection:
             ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
 
-  RatingsTable:
-    Type: AWS::DynamoDB::Table
+  # -----------------------
+  # Cognito User Pool
+  # -----------------------
+  AppUserPool:
+    Type: AWS::Cognito::UserPool
     Properties:
-      TableName: Ratings
-      AttributeDefinitions:
-        - AttributeName: rating_id
-          AttributeType: S
-        - AttributeName: project_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: rating_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: ProjectIndex
-          KeySchema:
-            - AttributeName: project_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
+      UserPoolName: AppUserPool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+        # Standard attributes (no AttributeDataType needed)
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: given_name
+          Required: true
+          Mutable: true
+        - Name: family_name
+          Required: true
+          Mutable: true
+      MfaConfiguration: OFF
+      UsernameConfiguration:
+        CaseSensitive: false
 
-  NotesTable:
-    Type: AWS::DynamoDB::Table
+  # -----------------------
+  # Cognito User Pool Client
+  # -----------------------
+  AppUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
     Properties:
-      TableName: Notes
-      AttributeDefinitions:
-        - AttributeName: note_id
-          AttributeType: S
-        - AttributeName: project_id
-          AttributeType: S
-        # - AttributeName: media_name
-        #   AttributeType: S
-        - AttributeName: user_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: note_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: ProjectIndex # query notes by project_id
-          KeySchema:
-            - AttributeName: project_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: UserIndex # query notes by user_id
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
+      ClientName: AppUserPoolClient
+      UserPoolId: !Ref AppUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      RefreshTokenValidity: 30
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
 
-  TenantsTable:
-    Type: AWS::DynamoDB::Table
+  # -----------------------
+  # Cognito Identity Pool
+  # -----------------------
+  AppIdentityPool:
+    Type: AWS::Cognito::IdentityPool
     Properties:
-      TableName: Tenants
-      AttributeDefinitions:
-        - AttributeName: tenant_id
-          AttributeType: S
-        - AttributeName: name
-          AttributeType: S
-        - AttributeName: handle
-          AttributeType: S
-      KeySchema:
-        - AttributeName: tenant_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: TenantNameIndex
-          KeySchema:
-            - AttributeName: name
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: TenantHandleIndex
-          KeySchema:
-            - AttributeName: handle
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
-
-  ReferralsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: Referrals
-      AttributeDefinitions:
-        - AttributeName: referral_id
-          AttributeType: S
-        - AttributeName: created_by
-          AttributeType: S
-        - AttributeName: code
-          AttributeType: S
-      KeySchema:
-        - AttributeName: referral_id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: CreatedByIndex
-          KeySchema:
-            - AttributeName: created_by
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: ReferralCodeIndex
-          KeySchema:
-            - AttributeName: code
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
-
-  MetadataTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: Metadata
-      AttributeDefinitions:
-        - AttributeName: project_id
-          AttributeType: S
-        - AttributeName: image_name
-          AttributeType: S
-      KeySchema:
-        - AttributeName: project_id
-          KeyType: HASH
-        - AttributeName: image_name
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-
-  # Signup Creation Queue + DLQ
-  SignupQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: signup-creation-queue
-      VisibilityTimeout: 60
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt SignupDLQ.Arn
-        maxReceiveCount: 3
-
-  SignupDLQ:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: signup-creation-dlq
-
-  # Cleanup Queue + DLQ
-  CleanupQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: signup-cleanup-queue
-      VisibilityTimeout: 60
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt CleanupDLQ.Arn
-        maxReceiveCount: 3
-
-  CleanupDLQ:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: signup-cleanup-dlq
-
-  CreateProjectQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: create-project-queue
-
-  AddFilesQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: add-files-queue
-      VisibilityTimeout: 60
-
-  AddFilesCleanupQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: add-files-cleanup-queue
-      VisibilityTimeout: 60
+      IdentityPoolName: AppIdentityPool
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref AppUserPoolClient
+          ProviderName: !GetAtt AppUserPool.ProviderName
+          ServerSideTokenCheck: true

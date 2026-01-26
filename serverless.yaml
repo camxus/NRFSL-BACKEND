@@ -1,0 +1,40 @@
+org: xpegdrop
+app: xpegdrop
+service: rest-api
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'prod'}
+  region: ${env:AWS_REGION_CODE, 'eu-west-1'}
+  environment: ${file(./.serverless/env.yaml)}
+  iamRoleStatements: ${file(./.serverless/iamRoleStatements.yaml)}
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${env:EXPRESS_PUBLIC_FRONTEND_URL}
+        - http://localhost:3000
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowCredentials: true
+    authorizers:
+      jwtAuthorizer:
+        type: request
+        functionName: authorizer
+        identitySource: $request.header.Authorization
+
+resources: ${file(./.serverless/resources.yaml)}
+
+functions: ${file(./.serverless/functions.yaml)}
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin

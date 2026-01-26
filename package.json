@@ -1,6 +1,21 @@
 {
   "name": "backend",
   "packageManager": "yarn@4.12.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "nodemon src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "serverless deploy",
+    "aws:configure": "open ~/.aws/credentials",
+    "gen:serverless:env": "node generate-serverless-env.js",
+    "gen:env": "node generate-env.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.971.0",
     "@aws-sdk/client-dynamodb": "^3.971.0",
@@ -8,14 +23,21 @@
     "@aws-sdk/s3-presigned-post": "^3.971.0",
     "@aws-sdk/s3-request-presigner": "^3.971.0",
     "@aws-sdk/util-dynamodb": "^3.971.0",
+    "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "axios": "^1.13.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
+    "lambda-multipart-parser": "^1.0.1",
     "mime-types": "^3.0.2",
     "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "serverless-http": "^4.0.0",
+    "ts-node": "^10.9.2",
     "uuid": "^13.0.0"
   }
 }
