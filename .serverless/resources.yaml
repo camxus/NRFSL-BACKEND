@@ -28,10 +28,10 @@ Resources:
               - x-amz-id-2
             MaxAge: 3000
 
-  ThumbnailsBucket:
+  AppBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: ${env:EXPRESS_S3_THUMBNAILS_BUCKET}
+      BucketName: ${env:EXPRESS_S3_APP_BUCKET}
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
