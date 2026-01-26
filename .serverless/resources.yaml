@@ -11,7 +11,7 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
-              - ${env:EXPRESS_PUBLIC_FRONTEND_URL}
+              # - ${env:EXPRESS_PUBLIC_FRONTEND_URL}
               - http://localhost:3000
             AllowedHeaders:
               - Authorization
@@ -35,7 +35,7 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
-              - ${env:EXPRESS_PUBLIC_FRONTEND_URL}
+              # - ${env:EXPRESS_PUBLIC_FRONTEND_URL}
               - http://localhost:3000
             AllowedHeaders:
               - Authorization
