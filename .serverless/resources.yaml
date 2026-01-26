@@ -114,7 +114,7 @@ Resources:
     Properties:
       ClientName: AppUserPoolClient
       UserPoolId: !Ref AppUserPool
-      GenerateSecret: false
+      GenerateSecret: true
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
