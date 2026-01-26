@@ -29,6 +29,7 @@
     "axios": "^1.13.2",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "lambda-multipart-parser": "^1.0.1",
@@ -41,5 +42,8 @@
     "serverless-offline": "^14.4.0",
     "ts-node": "^10.9.2",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5"
   }
 }
