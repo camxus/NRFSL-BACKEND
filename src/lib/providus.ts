@@ -2,7 +2,14 @@
 import axios, { AxiosInstance } from 'axios';
 import fs from 'fs';
 import FormData from 'form-data';
+import dotenv from "dotenv"
 
+import path from 'path';
+import { fileTypeFromBuffer } from 'file-type';
+
+const logFilePath = path.join(__dirname, 'error.log');
+
+dotenv.config()
 export class ProvidusAPI {
   private client: AxiosInstance;
   private token: string | null = null;
@@ -26,13 +33,28 @@ export class ProvidusAPI {
 
   // Login
   async login() {
-    const response = await this.client.post('/account/ops/api/login', {
-      username: this.username,
-      password: this.password,
-    });
-    const { token } = response.data; // assuming API returns a token
-    this.setToken(token);
-    return response.data;
+    try {
+      const response = await this.client.post('/account/ops/api/login', {
+        username: this.username,
+        password: this.password,
+      });
+
+      const token = response.data.result.accessToken; // assuming API returns a token
+      this.setToken(token);
+
+      return response.data;
+    } catch (error: any) {
+      // Axios error with response
+      if (error.response?.data?.message) {
+        // message can be an array or string
+        const message = Array.isArray(error.response.data.message)
+          ? error.response.data.message.join(', ')
+          : error.response.data.message;
+        throw new Error(message);
+      }
+      // fallback error
+      throw new Error(error.message || 'An unknown error occurred');
+    }
   }
 
   // Validate BVN
@@ -72,10 +94,10 @@ export class ProvidusAPI {
     altEmail: string;
     altPhone: string;
     currentAddress: string;
-    passport: string;
-    identity: string;
-    utility: string;
-    signature: string;
+    passport?: Uint8Array;
+    identity?: Uint8Array;
+    utility?: Uint8Array;
+    signature?: Uint8Array;
     NIN: string;
     occupation: string;
     motherMaidenName: string;
@@ -85,29 +107,56 @@ export class ProvidusAPI {
   }) {
     if (!this.token) throw new Error('Authorization token is missing');
 
-    const formData = new FormData();
-    for (const key in accountData) {
-      const value = (accountData as any)[key];
-      if (['passport', 'identity', 'utility', 'signature'].includes(key)) {
-        formData.append(key, fs.createReadStream(value));
-      } else {
-        formData.append(key, value);
-      }
-    }
+    try {
+      const formData = new FormData();
+      for (const key in accountData) {
+        const value = (accountData as any)[key];
+        if (['passport', 'identity', 'utility', 'signature'].includes(key)) {
+          const type = await fileTypeFromBuffer(value);
 
-    const response = await this.client.post(
-      '/account/ops/api/individual_account_api',
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          Authorization: `Bearer ${this.token}`,
-        },
+          formData.append(key, value, {
+            filename: `${key}${type ? '.' + type.ext : ''}`,
+            contentType: type?.mime || 'application/octet-stream',
+          });
+        } else {
+          formData.append(key, value);
+        }
       }
-    );
-    return response.data;
+
+      console.log(this.token)
+
+      const response = await this.client.post(
+        '/account/ops/api/individual_account_api',
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      // Construct the message
+      const message =
+        error.response?.data?.message?.join?.(', ') ||
+        error.response?.data?.message ||
+        error.message ||
+        'An unknown error occurred';
+
+      // Log to console (optional)
+      console.error(message);
+
+      // Write to log file with timestamp
+      const logEntry = `[${new Date().toISOString()}] ${message}\n`;
+      fs.appendFileSync(logFilePath, logEntry, { encoding: 'utf8' });
+
+      // Throw error after logging
+      throw new Error(message);
+    }
   }
 }
 
 // Export a singleton
-export const providusAPI = new ProvidusAPI('https://test1.providusbank.com/api/v5/account/ops/api');
+export const providusAPI = new ProvidusAPI('https://test1.providusbank.com/api/v5');

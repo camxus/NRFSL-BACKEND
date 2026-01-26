@@ -68,30 +68,30 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   const { error, value } = signUpSchema.validate(req.body);
   if (error) throw validationErrorHandler(error);
 
-  const { password, email, first_name, last_name, birthdate,
-    kyc: {
-      bvn,
-      nin,
-      religion,
-      country,
-      altEmail,
-      altPhone,
-      currentAddress,
-      occupation,
-      motherMaidenName,
-      residentState,
-      residentLGA,
-      residentOtherLGA
-    }
-  } =
+  const { password, email, first_name, last_name, birthdate } =
     value as SignUpInput;
 
 
-  let identity =
-    typeof value.identity === "string"
-      ? JSON.parse((value.identity as string) || "{}")
-      : value.identity;
+  const kyc =
+    typeof value.kyc === "string"
+      ? JSON.parse((value.kyc as string) || "{}")
+      : value.kyc;
 
+  const {
+    bvn,
+    nin,
+    religion,
+    country,
+    altEmail,
+    altPhone,
+    currentAddress,
+    occupation,
+    motherMaidenName,
+    residentState,
+    residentLGA,
+    residentOtherLGA
+  } = kyc
+  
   let passport_photo =
     typeof value.passport_photo === "string"
       ? JSON.parse((value.passport_photo as string) || "{}")
@@ -204,7 +204,8 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
         s3Client,
         process.env.EXPRESS_S3_APP_BUCKET!,
         `kyc/${createdUserSub}/${folder}.${ext}`,
-        file.buffer
+        file.buffer,
+        false
       );
     }
 
@@ -263,12 +264,13 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
 
     await providusAPI.openAccount({
       ...userData.kyc, NIN: userData.kyc.nin.toString(),
-      passport: filesToBase64(files?.passport),
-      identity: filesToBase64(files?.identity),
-      utility: filesToBase64(files?.utility),
-      signature: filesToBase64(files?.signature),
+      passport: files?.passport?.[0].buffer,
+      identity: files?.identity?.[0].buffer,
+      utility: files?.utility?.[0].buffer,
+      signature: files?.signature?.[0].buffer,
     })
 
+    console.log("here")
 
     //TODO INSERT PROVIDUS USER DATA
 
