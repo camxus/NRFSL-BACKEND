@@ -1,5 +1,5 @@
-org: xpegdrop
-app: xpegdrop
+org: nrfsl
+app: diaspora-wallet
 service: rest-api
 
 provider:
