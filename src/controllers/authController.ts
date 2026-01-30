@@ -42,6 +42,7 @@ import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import jwt from "jsonwebtoken"
 import { providusAPI } from "../lib/providus"
 import { identity } from "lodash";
+import Joi from "joi";
 
 const upload = multer({
   storage: multer.memoryStorage(), // stores file in memory for direct upload to S3
@@ -68,9 +69,8 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   const { error, value } = signUpSchema.validate(req.body);
   if (error) throw validationErrorHandler(error);
 
-  const { password, email, first_name, last_name, birthdate } =
+  const { password, email, first_name, last_name, birthdate, providus_token } =
     value as SignUpInput;
-
 
   const kyc =
     typeof value.kyc === "string"
@@ -91,7 +91,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     residentLGA,
     residentOtherLGA
   } = kyc
-  
+
   let passport_photo =
     typeof value.passport_photo === "string"
       ? JSON.parse((value.passport_photo as string) || "{}")
@@ -261,7 +261,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     }
 
     await providusAPI.login()
-
+    await providusAPI.setToken(providus_token)
     await providusAPI.openAccount({
       ...userData.kyc, NIN: userData.kyc.nin.toString(),
       passport: files?.passport?.[0].buffer,
@@ -269,8 +269,6 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       utility: files?.utility?.[0].buffer,
       signature: files?.signature?.[0].buffer,
     })
-
-    console.log("here")
 
     //TODO INSERT PROVIDUS USER DATA
 
@@ -590,3 +588,62 @@ export const getPresignPOST = asyncHandler(async (req: AuthenticatedRequest, res
     max_size: MAX_FILE_SIZE,
   });
 });
+
+export const validateBVN = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = Joi.object({
+      bvn_token: Joi.string()
+        .length(11)
+        .pattern(/^\d+$/)
+        .required(),
+    }).validate(req.body);
+    if (error) throw validationErrorHandler(error);
+
+    const { bvn_token } = value;
+
+    try {
+      await providusAPI.login();
+
+      const result = await providusAPI.validateBVN(bvn_token);
+
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err: any) {
+      console.error("BVN validation error:", err);
+
+      return res.status(400).json({
+        success: false,
+        error: err.message || "BVN validation failed",
+      });
+    }
+  }
+);
+
+export const verifyBVNToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { error, value } = Joi.object({
+      bvn_token: Joi.string().required(),
+      verify_token: Joi.string().required(),
+    }).validate(req.body);
+    if (error) throw validationErrorHandler(error);
+
+    const { verify_token, bvn_token } = value;
+
+    try {
+      await providusAPI.login();
+
+      const result = await providusAPI.verifyToken(verify_token, bvn_token);
+
+      return res.status(200).json(result);
+    } catch (err: any) {
+      console.error("BVN verification error:", err);
+
+      return res.status(400).json({
+        success: false,
+        error: err.message || "BVN verificaiton failed",
+      });
+    }
+  }
+);

@@ -7,7 +7,9 @@ export const signUpSchema = Joi.object({
   last_name: Joi.string().min(1).max(50).required(),
   birthdate: Joi.date().required(),
   avatar: Joi.string().optional(),
-  kyc: Joi.string()
+  kyc: Joi.string(),
+
+  providus_token: Joi.string().required()
   // kyc: Joi.object({
   //   bvn: Joi.string().optional(),
   //   nin: Joi.string().optional(),

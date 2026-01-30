@@ -9,6 +9,8 @@ import {
   uploadKycFiles,
   getPresignURL,
   getPresignPOST,
+  validateBVN,
+  verifyBVNToken,
 } from "../controllers/authController";
 import { authenticate } from "../middleware/auth";
 
@@ -22,5 +24,8 @@ router.post("/confirm-password", confirmPassword);
 // router.post("/set-new-password", setNewPassword);
 router.get("/presign-url", getPresignURL);
 router.get("/presign-post", getPresignPOST);
+
+router.post("/validate-bvn", validateBVN);
+router.post("/verify-bvn", verifyBVNToken);
 
 export default router;

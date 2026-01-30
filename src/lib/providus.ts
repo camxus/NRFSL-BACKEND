@@ -12,7 +12,9 @@ const logFilePath = path.join(__dirname, 'error.log');
 dotenv.config()
 export class ProvidusAPI {
   private client: AxiosInstance;
+  private login_token: string | null = null;
   private token: string | null = null;
+  private bvn_token: string | null = null;
   private username: string | null = null;
   private password: string | null = null;
 
@@ -20,7 +22,9 @@ export class ProvidusAPI {
     this.client = axios.create({
       baseURL,
     });
-    this.token = process.env.EXPRESS_PROVIDUS_TOKEN!
+    this.login_token = ""
+    this.token = ""
+    this.bvn_token = ""
     this.username = process.env.EXPRESS_PROVIDUS_USERNAME!
     this.password = process.env.EXPRESS_PROVIDUS_PASSWORD!
   }
@@ -39,8 +43,7 @@ export class ProvidusAPI {
         password: this.password,
       });
 
-      const token = response.data.result.accessToken; // assuming API returns a token
-      this.setToken(token);
+      this.login_token = response.data.result.accessToken
 
       return response.data;
     } catch (error: any) {
@@ -59,31 +62,35 @@ export class ProvidusAPI {
 
   // Validate BVN
   async validateBVN(bvn: string) {
-    if (!this.token) throw new Error('Authorization token is missing');
+    if (!this.login_token) throw new Error('Authorization token is missing');
     const response = await this.client.post(
       '/account/ops/api/validate_bvn',
       { bvn },
       {
         headers: {
-          Authorization: `Bearer ${this.token}`,
+          Authorization: `Bearer ${this.login_token}`,
         },
       }
     );
+    this.bvn_token = response.data.result.accessToken
     return response.data;
   }
 
   // Verify Token (OTP or similar)
-  async verifyToken(tokenCode: string) {
-    if (!this.token) throw new Error('Authorization token is missing');
+  async verifyToken(tokenCode: string, bvnToken?: string) {
+    if (!this.bvn_token) throw new Error('BVN Authorization token is missing');
     const response = await this.client.post(
       '/account/ops/api/verifyToken',
       { token: tokenCode },
       {
         headers: {
-          Authorization: `Bearer ${this.token}`,
+          Authorization: `Bearer ${bvnToken ?? this.bvn_token}`,
         },
       }
     );
+
+    this.setToken(response.data.result.accessToken)
+    console.log("set token", response.data.result.accessToken)
     return response.data;
   }
 
@@ -122,8 +129,6 @@ export class ProvidusAPI {
           formData.append(key, value);
         }
       }
-
-      console.log(this.token)
 
       const response = await this.client.post(
         '/account/ops/api/individual_account_api',

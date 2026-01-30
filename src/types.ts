@@ -31,6 +31,7 @@ export interface SignUpInput {
     residentOtherLGA: string,
   }
 
+  providus_token: string
 }
 
 export interface SignInInput {

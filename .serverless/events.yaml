@@ -20,3 +20,9 @@
 - httpApi:
     path: /api/auth/presign-url
     method: GET
+- httpApi:
+    path: /api/auth/validate-bvn
+    method: POST
+- httpApi:
+    path: /api/auth/verify-bvn
+    method: POST
