@@ -62,36 +62,87 @@ export class ProvidusAPI {
 
   // Validate BVN
   async validateBVN(bvn: string) {
-    if (!this.login_token) throw new Error('Authorization token is missing');
-    const response = await this.client.post(
-      '/account/ops/api/validate_bvn',
-      { bvn },
-      {
-        headers: {
-          Authorization: `Bearer ${this.login_token}`,
-        },
+    if (!this.login_token) {
+      throw new Error('Authorization token is missing');
+    }
+
+    try {
+      const response = await this.client.post(
+        '/account/ops/api/validate_bvn',
+        { bvn },
+        {
+          headers: {
+            Authorization: `Bearer ${this.login_token}`,
+          },
+        }
+      );
+
+      this.bvn_token = response.data?.result?.accessToken;
+      return response.data;
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // API responded but with an error status (400, 401, 500, etc.)
+        console.error('BVN validation error:', {
+          status: error.response?.status,
+          message: error.response?.data?.message,
+          data: error.response?.data,
+        });
+
+        throw new Error(
+          error.response?.data?.message || 'BVN validation failed'
+        );
       }
-    );
-    this.bvn_token = response.data.result.accessToken
-    return response.data;
+
+      // Non-Axios / unexpected error
+      console.error('Unexpected BVN validation error:', error);
+      throw new Error('Unexpected error during BVN validation');
+    }
   }
 
-  // Verify Token (OTP or similar)
   async verifyToken(tokenCode: string, bvnToken?: string) {
-    if (!this.bvn_token) throw new Error('BVN Authorization token is missing');
-    const response = await this.client.post(
-      '/account/ops/api/verifyToken',
-      { token: tokenCode },
-      {
-        headers: {
-          Authorization: `Bearer ${bvnToken ?? this.bvn_token}`,
-        },
-      }
-    );
+    const authToken = bvnToken ?? this.bvn_token;
+    if (!authToken) {
+      throw new Error('BVN Authorization token is missing');
+    }
 
-    this.setToken(response.data.result.accessToken)
-    console.log("set token", response.data.result.accessToken)
-    return response.data;
+    try {
+      const response = await this.client.post(
+        '/account/ops/api/verifyToken',
+        { token: tokenCode },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      const accessToken = response.data?.result?.accessToken;
+
+      if (!accessToken) {
+        throw new Error('Access token missing in verifyToken response');
+      }
+
+      this.setToken(accessToken);
+
+      return response.data;
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Verify token error:', {
+          status: error.response?.status,
+          message: error.response?.data?.message,
+          data: error.response?.data,
+        });
+
+        throw new Error(
+          error.response?.data?.message || 'Token verification failed'
+        );
+      }
+
+      console.error('Unexpected verifyToken error:', error);
+      throw new Error('Unexpected error during token verification');
+    }
   }
 
   // Open Account
