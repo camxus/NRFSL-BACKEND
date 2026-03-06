@@ -102,7 +102,7 @@ export class ProvidusAPI {
 
   async verifyToken(tokenCode: string, bvnToken?: string) {
     const authToken = bvnToken ?? this.bvn_token;
-    if (!authToken) {
+    if (!this.login_token) {
       throw new Error('BVN Authorization token is missing');
     }
 

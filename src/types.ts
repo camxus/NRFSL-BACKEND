@@ -10,6 +10,7 @@ export interface SignUpInput {
   first_name: string;
   last_name: string;
   birthdate: string;
+  phone_number: string;
   avatar?: S3Location;
 
   kyc: {
@@ -45,6 +46,7 @@ export interface User {
   first_name: string;
   last_name: string;
   birthdate: string;
+  phone_number: string;
 
   avatar?: S3Location | string;
   kyc: {
@@ -65,6 +67,16 @@ export interface User {
     residentLGA: string,
     residentOtherLGA: string,
   }
+
+  providus?: {
+    AccountNUBAN: string,
+    AccountName: string,
+    AccountNumberFull: string,
+    CustomerNumber: string,
+    ResponseCode: string,
+    ResponseDetInfo: string,
+  },
+
   expo?: {
     push_token: string
   }

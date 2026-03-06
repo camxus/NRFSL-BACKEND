@@ -69,7 +69,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   const { error, value } = signUpSchema.validate(req.body);
   if (error) throw validationErrorHandler(error);
 
-  const { password, email, first_name, last_name, birthdate, providus_token } =
+  const { password, email, first_name, last_name, birthdate, phone_number, providus_token } =
     value as SignUpInput;
 
   const kyc =
@@ -233,6 +233,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       first_name,
       last_name,
       birthdate,
+      phone_number,
       kyc: {
         bvn,
         nin,
@@ -262,7 +263,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
 
     await providusAPI.login()
     await providusAPI.setToken(providus_token)
-    await providusAPI.openAccount({
+    const { result: providusData } = await providusAPI.openAccount({
       ...userData.kyc, NIN: userData.kyc.nin.toString(),
       passport: files?.passport?.[0].buffer,
       identity: files?.identity?.[0].buffer,
@@ -270,17 +271,17 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
       signature: files?.signature?.[0].buffer,
     })
 
-    //TODO INSERT PROVIDUS USER DATA
+    userData.providus = providusData,
 
-    // Insert user
-    await client.send(
-      new PutItemCommand({
-        TableName: USERS_TABLE,
-        Item: marshall(userData, {
-          removeUndefinedValues: true,
-        }),
-      })
-    );
+      // Insert user
+      await client.send(
+        new PutItemCommand({
+          TableName: USERS_TABLE,
+          Item: marshall(userData, {
+            removeUndefinedValues: true,
+          }),
+        })
+      );
 
 
     res.status(201).json({
