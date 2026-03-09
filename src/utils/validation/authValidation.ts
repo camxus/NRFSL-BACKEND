@@ -5,8 +5,8 @@ export const signUpSchema = Joi.object({
   password: Joi.string().min(8).required(),
   first_name: Joi.string().min(1).max(50).required(),
   last_name: Joi.string().min(1).max(50).required(),
-  birthdate: Joi.date().required(),
-  phone_number: Joi.date().required(),
+  birthdate: Joi.string().required(),
+  phone_number: Joi.string().required(),
   avatar: Joi.string().optional(),
   kyc: Joi.string(),
 
